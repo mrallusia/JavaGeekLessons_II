@@ -58,7 +58,12 @@ public class ClientHandler {
                         // nick_change
                         if (msg.startsWith("/change_nickname ")) {
                             String[] token = msg.split(" ", 2);
-                            server.getAuthManager().changeNickname(this.getNickname(), token[1]);
+                            String newNickname = token[1];
+                            if(server.getAuthManager().changeNickname(nickname, newNickname)) {
+                                sendMsg("/set_nick_to" + newNickname);
+                            } else {
+                                sendMsg("Сервер: не удалось сменить ник");
+                            }
                             nickname = token[1];
                             server.broadcastClientsList();
                             continue;

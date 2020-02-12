@@ -87,28 +87,17 @@ public class BasicAuthManager implements AuthManager {
      * Меняем ник в базе и в листе
      */
     @Override
-    public void changeNickname (String nickname, String newNickname){
+    public boolean changeNickname (String nickname, String newNickname){
+        throw new UnsupportedOperationException();
+    }
 
-        try {
-            connect();
-            stmt.executeUpdate("UPDATE clients SET nickname = "+"'"+newNickname+"'"+" WHERE nickname = "+"'"+ nickname +"'"+ ";");
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-        } finally {
-            disconect();
-        }
+    @Override
+    public void start() {
+        throw new UnsupportedOperationException();
+    }
 
-        String oldLogin = null;
-        String oldPass = null;
-        int index = 0;
-        for (Entry u: users) {
-            if (u.nickname.equals(nickname)) {
-                index = users.indexOf(u);
-                oldLogin = u.login;
-                oldPass = u.password;
-            }
-        }
-        users.add(new Entry (oldLogin, oldPass, newNickname));
-        users.remove(index);
+    @Override
+    public void stop() {
+        throw new UnsupportedOperationException();
     }
 }
