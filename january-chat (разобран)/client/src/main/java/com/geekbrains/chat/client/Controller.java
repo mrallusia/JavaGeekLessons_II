@@ -9,11 +9,12 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
@@ -75,6 +76,7 @@ public class Controller implements Initializable {
                         if (msg.startsWith("/authOk ")) {
                             nickname = msg.split( "\\s")[1];
                             setAuthenticated(true);
+                            historyLoad();
                             break;
                         }
                         textArea.appendText(msg + "\n");
@@ -85,6 +87,11 @@ public class Controller implements Initializable {
                             if (msg.equals("/end_confirm")) {
                                 textArea.appendText("Завершено общение с сервером" + "\n");
                                 break;
+                            }
+                            if (msg.equals("/set_nick_to")) {
+                                nickname = msg.split( "\\s")[1];
+                                textArea.appendText("Ваш новый ник" + nickname + "\n");
+                                continue;
                             }
                             if (msg.startsWith("/clients_list")) {
                                 Platform.runLater(() -> {
@@ -99,6 +106,7 @@ public class Controller implements Initializable {
                             }
                         } else {
                             textArea.appendText(msg + "\n");
+                            historySave(msg);
                         }
                     }
                 } catch (IOException e) {
@@ -129,6 +137,45 @@ public class Controller implements Initializable {
             alert.showAndWait();
         }
     }
+
+    public void historySave (String message) {
+        // Запись сообщений в файл
+        try (FileOutputStream out = new FileOutputStream("history_" + nickname + ".txt",true)){
+            out.write(message.getBytes());
+            out.write(10);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void historyLoad () {
+        // Чтение сообщений из файла
+        // Для вычитывания последних 100 файл прочитал в строки,
+        // разбил строки по переносу и  < 100 просто печатаю
+        // а > 100 циклом с 100-ой с конца печатаю
+        // Вот такая идея:
+        try (InputStreamReader in = new InputStreamReader (new FileInputStream("history_" + nickname + ".txt"), StandardCharsets.UTF_8)){
+            int x;
+            StringBuffer strBuffer = new StringBuffer();
+            while ((x = in.read()) != -1){
+                strBuffer.append((char)x);
+            }
+            String[] str = strBuffer.toString().split("\n");
+
+            int border = 100; // ограничение выводимых строк
+            if (str.length-1 > border) {
+                for (int i = str.length - 1 - border ; i < str.length; i++) {
+                    textArea.appendText(str[i] + "\n");
+                }
+            } else {
+                textArea.appendText(strBuffer.toString());
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void tryToAuth(ActionEvent actionEvent) {
         try {
