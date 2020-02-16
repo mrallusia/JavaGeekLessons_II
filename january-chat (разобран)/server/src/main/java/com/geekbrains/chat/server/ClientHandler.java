@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ClientHandler {
 
@@ -23,8 +25,12 @@ public class ClientHandler {
         this.socket = socket;
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
-        new Thread(() -> {
+
+        ExecutorService service = Executors.newFixedThreadPool(4);
+
+        service.execute(() -> {
             try {
+
                 while (true) {
                     String msg = in.readUTF();
                     if (msg.startsWith("/auth")) {
@@ -45,6 +51,7 @@ public class ClientHandler {
                         }
                     }
                 }
+
                 while (true) {
                     String msg = in.readUTF();
                     System.out.print("Сообщение от клиента: " + msg + "\n");
@@ -81,9 +88,10 @@ public class ClientHandler {
                 e.printStackTrace();
             } finally {
                 close();
+                service.shutdown();
             }
+        });
 
-        }).start();
     }
 
     public void sendMsg(String msg) {
